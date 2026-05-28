@@ -58,6 +58,8 @@ data class Task(
     val command: String,
     @SerializedName("cron_expression")
     val cronExpression: String?,
+    @SerializedName("cron_expressions")
+    val cronExpressions: List<String>?,
     @SerializedName("task_type")
     val taskType: String?,
     val status: Double,
@@ -67,10 +69,45 @@ data class Task(
     val lastRunAt: String?,
     @SerializedName("last_run_status")
     val lastRunStatus: Int?,
+    @SerializedName("last_running_time")
+    val lastRunningTime: String?,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
-    val updatedAt: String
+    val updatedAt: String,
+    @SerializedName("next_run_at")
+    val nextRunAt: String?,
+    @SerializedName("log_path")
+    val logPath: String?,
+    @SerializedName("allow_multiple_instances")
+    val allowMultipleInstances: Boolean?,
+    @SerializedName("depends_on")
+    val dependsOn: String?,
+    val labels: List<String>?,
+    @SerializedName("display_labels")
+    val displayLabels: List<String>?,
+    @SerializedName("max_retries")
+    val maxRetries: Int?,
+    @SerializedName("notification_channel_id")
+    val notificationChannelId: Int?,
+    @SerializedName("notify_on_failure")
+    val notifyOnFailure: Boolean?,
+    @SerializedName("notify_on_success")
+    val notifyOnSuccess: Boolean?,
+    val pid: Int?,
+    @SerializedName("random_delay_seconds")
+    val randomDelaySeconds: Int?,
+    @SerializedName("retry_interval")
+    val retryInterval: Int?,
+    @SerializedName("sort_order")
+    val sortOrder: Int?,
+    @SerializedName("stop_schedule")
+    val stopSchedule: String?,
+    @SerializedName("task_after")
+    val taskAfter: String?,
+    @SerializedName("task_before")
+    val taskBefore: String?,
+    val timeout: Int?
 ) {
     companion object {
         const val STATUS_DISABLED = 0.0
@@ -135,8 +172,15 @@ data class Env(
     val name: String,
     val value: String,
     val remark: String?,
+    val remarks: String?,
     @SerializedName("is_enabled")
     val isEnabled: Boolean,
+    val enabled: Boolean?,
+    val group: String?,
+    val groups: List<String>?,
+    val position: Int?,
+    @SerializedName("sort_order")
+    val sortOrder: Int?,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
@@ -175,9 +219,11 @@ data class Script(
     val path: String,
     val size: Long,
     @SerializedName("is_dir")
-    val isDir: Boolean,
+    val isDir: Boolean = false,
     @SerializedName("modified_at")
-    val modifiedAt: String
+    val modifiedAt: String? = null,
+    @SerializedName("mtime")
+    val mtime: Long? = null
 )
 
 data class ScriptContentResponse(
@@ -185,7 +231,11 @@ data class ScriptContentResponse(
 )
 
 data class ScriptContent(
-    val content: String
+    val content: String,
+    val path: String?,
+    val binary: Boolean?,
+    @SerializedName("is_binary")
+    val isBinary: Boolean?
 )
 
 data class SaveScriptRequest(
@@ -208,6 +258,8 @@ data class TaskLog(
     val taskId: Int,
     @SerializedName("task_name")
     val taskName: String?,
+    @SerializedName("task_type")
+    val taskType: String?,
     val status: Int?,
     val content: String?,
     val output: String?,
@@ -220,7 +272,19 @@ data class TaskLog(
     @SerializedName("duration")
     val duration: Double?,
     @SerializedName("log_path")
-    val logPath: String?
+    val logPath: String?,
+    val labels: List<String>?,
+    val task: LogTask?,
+    @SerializedName("created_at")
+    val createdAt: String?,
+    @SerializedName("updated_at")
+    val updatedAt: String?
+)
+
+data class LogTask(
+    val labels: List<String>?,
+    @SerializedName("task_type")
+    val taskType: String?
 )
 
 // 日志详情直接返回 TaskLog 对象，不需要包装
@@ -230,6 +294,8 @@ data class LogDetailResponse(
     val taskId: Int,
     @SerializedName("task_name")
     val taskName: String?,
+    @SerializedName("task_type")
+    val taskType: String?,
     val status: Int?,
     val content: String?,
     @SerializedName("started_at")
@@ -239,7 +305,13 @@ data class LogDetailResponse(
     @SerializedName("duration")
     val duration: Double?,
     @SerializedName("log_path")
-    val logPath: String?
+    val logPath: String?,
+    val labels: List<String>?,
+    val task: LogTask?,
+    @SerializedName("created_at")
+    val createdAt: String?,
+    @SerializedName("updated_at")
+    val updatedAt: String?
 )
 
 // System
@@ -248,10 +320,45 @@ data class SystemInfoResponse(
 )
 
 data class SystemInfo(
-    val version: String,
-    @SerializedName("api_version")
-    val apiVersion: String,
-    val framework: String
+    val hostname: String?,
+    @SerializedName("machine_code")
+    val machineCode: String?,
+    @SerializedName("cpu_usage")
+    val cpuUsage: Double?,
+    @SerializedName("memory_total")
+    val memoryTotal: Long?,
+    @SerializedName("memory_used")
+    val memoryUsed: Long?,
+    @SerializedName("memory_free")
+    val memoryFree: Long?,
+    @SerializedName("memory_usage")
+    val memoryUsage: Double?,
+    @SerializedName("disk_total")
+    val diskTotal: Long?,
+    @SerializedName("disk_used")
+    val diskUsed: Long?,
+    @SerializedName("disk_free")
+    val diskFree: Long?,
+    @SerializedName("disk_usage")
+    val diskUsage: Double?,
+    val uptime: String?,
+    val goroutines: Int?,
+    @SerializedName("go_version")
+    val goVersion: String?,
+    val os: String?,
+    val arch: String?,
+    @SerializedName("num_cpu")
+    val numCpu: Int?,
+    @SerializedName("data_dir")
+    val dataDir: String?,
+    @SerializedName("net_rx_bytes")
+    val netRxBytes: Long?,
+    @SerializedName("net_tx_bytes")
+    val netTxBytes: Long?,
+    @SerializedName("net_rx_speed")
+    val netRxSpeed: Long?,
+    @SerializedName("net_tx_speed")
+    val netTxSpeed: Long?
 )
 
 data class HealthResponse(
@@ -357,7 +464,17 @@ data class DashboardData(
     @SerializedName("recent_logs")
     val recentLogs: List<TaskLog>?,
     @SerializedName("daily_stats")
-    val dailyStats: List<DailyStat>?
+    val dailyStats: List<DailyStat>?,
+    @SerializedName("prev_task_count")
+    val prevTaskCount: Int?,
+    @SerializedName("range_days")
+    val rangeDays: Int?,
+    @SerializedName("sub_count")
+    val subCount: Int?,
+    @SerializedName("yesterday_logs")
+    val yesterdayLogs: Int?,
+    @SerializedName("yesterday_success")
+    val yesterdaySuccess: Int?
 )
 
 data class DailyStat(

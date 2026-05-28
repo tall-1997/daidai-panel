@@ -1,0 +1,118 @@
+==========================================
+开始测试所有API端点
+==========================================
+
+=== 登录API ===
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTc4MTcyMTEzNywiaWF0IjoxNzc5OTkzMTM3LCJqdGkiOiJlZWMwNjIyZS0xYzdmLTQ1ZDctOTRlMi1jODIzNzczMDA0MWQifQ.B4boBaLkHGuHel5rfFFb5VulSUwdeZJmIjHRkHFWSk8",
+    "message": "\u767b\u5f55\u6210\u529f",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6InJlZnJlc2giLCJleHAiOjE3ODUxNzcxMzcsImlhdCI6MTc3OTk5MzEzNywianRpIjoiZWYxNWI5M2EtYTIyYS00OGM0LTgzMTUtZDdmNzM3OWViMjI5In0.XHvS5jY-14_4Pv8PGnume4M3SdSIQEQIendTT9aXdHM",
+    "user": {
+        "avatar_url": "",
+        "created_at": "2026-05-28T18:29:22.640311718Z",
+        "enabled": true,
+        "id": 1,
+        "last_login_at": "2026-05-28T18:32:17.515522724Z",
+        "role": "admin",
+        "updated_at": "2026-05-28T18:32:17.515575114Z",
+        "username": "admin"
+    }
+}
+
+=== 任务列表API ===
+{
+    "data": [
+        {
+            "allow_multiple_instances": false,
+            "command": "echo hello",
+            "created_at": "2026-05-28T18:29:51.886944737Z",
+            "cron_expression": "0 * * * *",
+            "cron_expressions": [
+                "0 * * * *"
+            ],
+            "depends_on": null,
+            "display_labels": [],
+            "id": 1,
+            "is_pinned": false,
+            "labels": [],
+            "last_run_at": null,
+            "last_run_status": null,
+            "last_running_time": null,
+            "log_path": null,
+            "max_retries": 0,
+            "name": "\u6d4b\u8bd5\u4efb\u52a1",
+            "next_run_at": "2026-05-28T19:00:00Z",
+            "notification_channel_id": null,
+            "notify_on_failure": false,
+            "notify_on_success": false,
+            "pid": null,
+            "random_delay_seconds": null,
+            "retry_interval": 60,
+            "sort_order": 0,
+            "status": 1,
+            "stop_schedule": "",
+            "task_after": null,
+            "task_before": null,
+            "task_type": "cron",
+            "timeout": 86400,
+            "updated_at": "2026-05-28T18:29:51.886944737Z"
+        }
+    ],
+    "page": 1,
+    "page_size": 10,
+    "total": 1
+}
+
+=== 环境变量列表API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 依赖列表API (nodejs) ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 脚本列表API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 脚本内容API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 日志列表API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 系统信息API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 系统健康检查API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 系统仪表盘API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 系统统计API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+=== 面板日志API ===
+{
+    "error": "\u7f3a\u5c11\u6388\u6743\u4ee4\u724c"
+}
+
+==========================================
+API测试完成
+==========================================

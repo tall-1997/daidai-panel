@@ -999,14 +999,55 @@ fun SettingsContent(
             onDismissRequest = { showSystemInfo = false },
             title = { Text("系统信息") },
             text = {
-                Column {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
                     uiState.systemInfo?.let { info ->
-                        Text("版本: ${info.version}")
-                        Text("API版本: ${info.apiVersion}")
-                        Text("框架: ${info.framework}")
+                        // 主机信息
+                        Text("主机名: ${info.hostname ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("机器码: ${info.machineCode ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // CPU信息
+                        Text("CPU使用率: ${info.cpuUsage ?: 0}%", style = MaterialTheme.typography.bodyMedium)
+                        Text("CPU核心数: ${info.numCpu ?: 0}", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // 内存信息
+                        val memoryTotalGB = (info.memoryTotal ?: 0) / (1024.0 * 1024 * 1024)
+                        val memoryUsedGB = (info.memoryUsed ?: 0) / (1024.0 * 1024 * 1024)
+                        Text("内存使用率: ${String.format("%.1f", info.memoryUsage ?: 0)}%", style = MaterialTheme.typography.bodyMedium)
+                        Text("内存总量: ${String.format("%.2f", memoryTotalGB)} GB", style = MaterialTheme.typography.bodyMedium)
+                        Text("内存已用: ${String.format("%.2f", memoryUsedGB)} GB", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // 磁盘信息
+                        val diskTotalGB = (info.diskTotal ?: 0) / (1024.0 * 1024 * 1024)
+                        val diskUsedGB = (info.diskUsed ?: 0) / (1024.0 * 1024 * 1024)
+                        Text("磁盘使用率: ${String.format("%.1f", info.diskUsage ?: 0)}%", style = MaterialTheme.typography.bodyMedium)
+                        Text("磁盘总量: ${String.format("%.2f", diskTotalGB)} GB", style = MaterialTheme.typography.bodyMedium)
+                        Text("磁盘已用: ${String.format("%.2f", diskUsedGB)} GB", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // 网络信息
+                        val netRxMB = (info.netRxBytes ?: 0) / (1024.0 * 1024)
+                        val netTxMB = (info.netTxBytes ?: 0) / (1024.0 * 1024)
+                        Text("网络接收: ${String.format("%.2f", netRxMB)} MB", style = MaterialTheme.typography.bodyMedium)
+                        Text("网络发送: ${String.format("%.2f", netTxMB)} MB", style = MaterialTheme.typography.bodyMedium)
+                        Text("接收速度: ${info.netRxSpeed ?: 0} B/s", style = MaterialTheme.typography.bodyMedium)
+                        Text("发送速度: ${info.netTxSpeed ?: 0} B/s", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // 系统信息
+                        Text("运行时间: ${info.uptime ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Go版本: ${info.goVersion ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("操作系统: ${info.os ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("架构: ${info.arch ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("协程数: ${info.goroutines ?: 0}", style = MaterialTheme.typography.bodyMedium)
+                        Text("数据目录: ${info.dataDir ?: "未知"}", style = MaterialTheme.typography.bodyMedium)
                     } ?: run {
-                        Text("App版本: 0.0.1")
-                        Text("构建版本: 1")
+                        Text("App版本: 0.0.3")
+                        Text("构建版本: 3")
                         Text("最低支持: Android 8.0")
                         Text("目标版本: Android 14")
                         Text("技术栈: Kotlin + Jetpack Compose")
