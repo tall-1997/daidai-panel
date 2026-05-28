@@ -43,3 +43,15 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
   - SSH默认密码: 123456
   - rootfs位置: /data/local/daidai
   - 数据目录: /data/local/daidai/app/Dumb-Panel
+
+[App服务器配置功能]
+- Date: 2026-05-28
+- Context: 用户要求检查App服务器配置逻辑并添加服务器地址选择功能
+- Category: 开发功能
+- Instructions:
+  - App默认服务器地址: http://127.0.0.1:5700
+  - 服务器配置存储在SharedPreferences中
+  - 添加了服务器地址选择对话框
+  - 支持预设常用服务器地址和历史记录
+  - 登录页面和设置页面都可以选择服务器地址
+  - 后端API实际运行在端口5701（本地开发环境）
