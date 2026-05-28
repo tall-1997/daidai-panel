@@ -98,6 +98,7 @@ fun TasksContent(
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showCreateDialog by remember { mutableStateOf(false) }
     
     Box(modifier = Modifier.fillMaxSize()) {
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
@@ -131,7 +132,9 @@ fun TasksContent(
                         onStop = { viewModel.stopTask(task.id) },
                         onEnable = { viewModel.enableTask(task.id) },
                         onDisable = { viewModel.disableTask(task.id) },
-                        onDelete = { viewModel.deleteTask(task.id) }
+                        onDelete = { viewModel.deleteTask(task.id) },
+                        onGetLogs = { viewModel.getTaskLogs(it) },
+                        taskLogs = uiState.taskLogs[task.id] ?: emptyList()
                     )
                 }
                 
@@ -144,7 +147,82 @@ fun TasksContent(
                 }
             }
         }
+        
+        // 添加任务按钮
+        FloatingActionButton(
+            onClick = { showCreateDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "添加任务")
+        }
     }
+    
+    // 创建任务对话框
+    if (showCreateDialog) {
+        CreateTaskDialog(
+            onDismiss = { showCreateDialog = false },
+            onCreate = { name, command, schedule ->
+                viewModel.createTask(name, command, schedule)
+                showCreateDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun CreateTaskDialog(
+    onDismiss: () -> Unit,
+    onCreate: (String, String, String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var command by remember { mutableStateOf("") }
+    var schedule by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("创建任务") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("任务名称") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = command,
+                    onValueChange = { command = it },
+                    label = { Text("执行命令") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = schedule,
+                    onValueChange = { schedule = it },
+                    label = { Text("调度表达式 (cron)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("例如: 0 0 * * * (每天0点)") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onCreate(name, command, schedule) },
+                enabled = name.isNotBlank() && command.isNotBlank()
+            ) {
+                Text("创建")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
 
 @Composable
@@ -1010,7 +1088,9 @@ fun TaskItem(
     onStop: () -> Unit,
     onEnable: () -> Unit,
     onDisable: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onGetLogs: ((Int) -> Unit)? = null,
+    taskLogs: List<String> = emptyList()
 ) {
     var expanded by remember { mutableStateOf(false) }
     
@@ -1062,7 +1142,7 @@ fun TaskItem(
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(
-                text = "调度: ${task.schedule}",
+                text = if (task.schedule.isNullOrBlank()) "调度: 未设置" else "调度: ${task.schedule}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1081,6 +1161,7 @@ fun TaskItem(
                     IconButton(onClick = {
                         onRun()
                         expanded = true
+                        onGetLogs?.invoke(task.id)
                     }) {
                         Icon(Icons.Default.PlayArrow, contentDescription = "执行")
                     }
@@ -1122,15 +1203,32 @@ fun TaskItem(
                             }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "任务 ${task.name} 正在运行...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        LinearProgressIndicator(
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        if (task.isRunning) {
+                            Text(
+                                text = "任务 ${task.name} 正在运行...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        if (taskLogs.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "最新日志:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            taskLogs.takeLast(5).forEach { log ->
+                                Text(
+                                    text = log,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

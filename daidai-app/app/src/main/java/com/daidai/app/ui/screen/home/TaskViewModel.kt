@@ -2,6 +2,7 @@ package com.daidai.app.ui.screen.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.daidai.app.data.remote.model.CreateTaskRequest
 import com.daidai.app.data.remote.model.Task
 import com.daidai.app.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +17,8 @@ data class TaskListUiState(
     val tasks: List<Task> = emptyList(),
     val error: String? = null,
     val currentPage: Int = 1,
-    val hasMore: Boolean = true
+    val hasMore: Boolean = true,
+    val taskLogs: Map<Int, List<String>> = emptyMap()
 )
 
 @HiltViewModel
@@ -123,6 +125,33 @@ class TaskViewModel @Inject constructor(
     fun deleteTask(taskId: Int) {
         viewModelScope.launch {
             taskRepository.deleteTask(taskId)
+                .onSuccess {
+                    // 刷新任务列表
+                    loadTasks(refresh = true)
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(error = exception.message)
+                }
+        }
+    }
+
+    fun getTaskLogs(taskId: Int) {
+        viewModelScope.launch {
+            taskRepository.getTaskLogs(taskId)
+                .onSuccess { logs ->
+                    _uiState.value = _uiState.value.copy(
+                        taskLogs = _uiState.value.taskLogs + (taskId to logs)
+                    )
+                }
+                .onFailure { exception ->
+                    // 静默失败，不影响用户体验
+                }
+        }
+    }
+
+    fun createTask(name: String, command: String, schedule: String) {
+        viewModelScope.launch {
+            taskRepository.createTask(CreateTaskRequest(name, command, schedule))
                 .onSuccess {
                     // 刷新任务列表
                     loadTasks(refresh = true)
