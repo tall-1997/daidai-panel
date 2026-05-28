@@ -24,7 +24,7 @@ import com.daidai.app.ui.screen.script.ScriptViewModel
 sealed class HomeTab(val title: String, val icon: ImageVector) {
     object Tasks : HomeTab("任务", Icons.Default.List)
     object Environments : HomeTab("环境变量", Icons.Default.Settings)
-    object Scripts : HomeTab("脚本", Icons.Default.Code)
+    object Dependencies : HomeTab("依赖管理", Icons.Default.Extension)
     object Logs : HomeTab("日志", Icons.Default.Article)
     object Settings : HomeTab("设置", Icons.Default.Settings)
 }
@@ -59,7 +59,7 @@ fun HomeScreen(
                 val tabs = listOf(
                     HomeTab.Tasks,
                     HomeTab.Environments,
-                    HomeTab.Scripts,
+                    HomeTab.Dependencies,
                     HomeTab.Logs,
                     HomeTab.Settings
                 )
@@ -82,7 +82,7 @@ fun HomeScreen(
             when (selectedTab) {
                 is HomeTab.Tasks -> TasksContent()
                 is HomeTab.Environments -> EnvironmentsContent()
-                is HomeTab.Scripts -> ScriptsContent()
+                is HomeTab.Dependencies -> DependenciesContent()
                 is HomeTab.Logs -> LogsContent()
                 is HomeTab.Settings -> SettingsContent(onLogout = onLogout)
             }
@@ -228,7 +228,7 @@ fun EnvironmentsContent(
 }
 
 @Composable
-fun ScriptsContent(
+fun DependenciesContent(
     viewModel: ScriptViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -267,7 +267,7 @@ fun ScriptsContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                if (script.isDir) Icons.Default.Folder else Icons.Default.Code,
+                                if (script.isDir) Icons.Default.Folder else Icons.Default.Extension,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
                                 tint = if (script.isDir) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
