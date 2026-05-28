@@ -204,6 +204,7 @@ com.daidai.app:drawable/notification_icon_background = 0x7f06000f
 com.daidai.app:attr/navGraph = 0x7f030017
 com.daidai.app:id/normal = 0x7f07003c
 com.daidai.app:id/hide_in_inspector_tag = 0x7f070032
+com.daidai.app:xml/network_security_config = 0x7f0e0002
 com.daidai.app:drawable/notification_bg_normal_pressed = 0x7f06000e
 com.daidai.app:drawable/notification_bg_low_pressed = 0x7f06000c
 com.daidai.app:id/inspection_slot_table_set = 0x7f070036

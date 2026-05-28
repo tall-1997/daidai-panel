@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-31:12
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-32:12
+INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-32:12
+INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-32:12
+INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:2:1-32:12
 MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /root/.gradle/caches/transforms-3/4dad55b598ac092b137f216624c22374/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.hilt:hilt-navigation:1.1.0] /root/.gradle/caches/transforms-3/1e0ef6d00515a8d87d9ecf85529309df/transformed/hilt-navigation-1.1.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigation:navigation-common:2.7.5] /root/.gradle/caches/transforms-3/18a1446dd0a9f876dc4f90968b76b037/transformed/navigation-common-2.7.5/AndroidManifest.xml:17:1-22:12
@@ -95,8 +95,8 @@ ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:6:5-79
 	android:name
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:6:22-76
 application
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:8:5-29:19
-INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:8:5-29:19
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:8:5-30:19
+INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:8:5-30:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.5.4] /root/.gradle/caches/transforms-3/4d58615a089f38e271765dc6df7a1609/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.5.4] /root/.gradle/caches/transforms-3/4d58615a089f38e271765dc6df7a1609/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-test-manifest:1.5.4] /root/.gradle/caches/transforms-3/c8642d5267bf596860fde693171a2f85/transformed/ui-test-manifest-1.5.4/AndroidManifest.xml:22:5-26:19
@@ -118,45 +118,47 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] /root/.gradle/caches/transf
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] /root/.gradle/caches/transforms-3/f4aaee0ef36b0545afac1f8291ef2532/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-35
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:17:9-35
 	android:label
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:14:9-41
 	android:fullBackupContent
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:12:9-54
 	android:roundIcon
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:15:9-50
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-50
 	tools:targetApi
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:18:9-29
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:19:9-29
 	android:icon
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:13:9-45
 	android:allowBackup
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:10:9-35
 	android:theme
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:17:9-47
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:18:9-47
+	android:networkSecurityConfig
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:15:9-69
 	android:dataExtractionRules
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:11:9-65
 	android:name
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:9:9-42
 activity#com.daidai.app.MainActivity
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:19:9-28:20
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:20:9-29:20
 	android:label
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:22:13-45
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:23:13-45
 	android:exported
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:21:13-36
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:22:13-36
 	android:theme
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:23:13-51
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:24:13-51
 	android:name
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:20:13-41
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:21:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:24:13-27:29
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:25:13-28:29
 action#android.intent.action.MAIN
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:25:17-69
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:26:17-69
 	android:name
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:25:25-66
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:26:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:26:17-77
+ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:27:17-77
 	android:name
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:26:27-74
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:27:27-74
 uses-sdk
 INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /workspace/daidai-app/app/src/main/AndroidManifest.xml
