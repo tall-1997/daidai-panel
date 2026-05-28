@@ -174,11 +174,13 @@ fun TasksContent(
 @Composable
 fun CreateTaskDialog(
     onDismiss: () -> Unit,
-    onCreate: (String, String, String) -> Unit
+    onCreate: (String, String, String) -> Unit,
+    onUploadScript: ((String, String) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
     var schedule by remember { mutableStateOf("") }
+    var showScriptSelector by remember { mutableStateOf(false) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -200,6 +202,19 @@ fun CreateTaskDialog(
                     minLines = 3
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { showScriptSelector = true }
+                    ) {
+                        Icon(Icons.Default.Upload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("上传脚本")
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = schedule,
                     onValueChange = { schedule = it },
@@ -215,6 +230,60 @@ fun CreateTaskDialog(
                 enabled = name.isNotBlank() && command.isNotBlank()
             ) {
                 Text("创建")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
+    
+    // 脚本选择器对话框
+    if (showScriptSelector) {
+        ScriptSelectorDialog(
+            onDismiss = { showScriptSelector = false },
+            onSelect = { scriptPath ->
+                command = "sh $scriptPath"
+                showScriptSelector = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ScriptSelectorDialog(
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    var scriptPath by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择脚本") },
+        text = {
+            Column {
+                Text(
+                    text = "输入脚本路径或从上传的脚本中选择",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = scriptPath,
+                    onValueChange = { scriptPath = it },
+                    label = { Text("脚本路径") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("例如: /scripts/my_script.sh") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSelect(scriptPath) },
+                enabled = scriptPath.isNotBlank()
+            ) {
+                Text("确定")
             }
         },
         dismissButton = {

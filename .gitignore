@@ -28,8 +28,8 @@ Thumbs.db
 .windsurf/
 .claude/
 
-data/
-log/
+/data/
+/log/
 /scripts/
 
 "daidai-panel.exe" 
