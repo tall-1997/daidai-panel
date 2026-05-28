@@ -1,8 +1,11 @@
 package com.daidai.app.ui.screen.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -338,7 +341,9 @@ fun LogsContent(
             ) {
                 items(uiState.logs) { log ->
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.loadLogDetail(log.id) }
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)
@@ -349,7 +354,7 @@ fun LogsContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = log.taskName,
+                                    text = log.taskName ?: "未知任务",
                                     style = MaterialTheme.typography.titleMedium,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -371,9 +376,9 @@ fun LogsContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            log.finishedAt?.let { finishedAt ->
+                            log.endedAt?.let { endedAt ->
                                 Text(
-                                    text = "结束时间: $finishedAt",
+                                    text = "结束时间: $endedAt",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -382,15 +387,6 @@ fun LogsContent(
                                 Text(
                                     text = "耗时: ${String.format("%.2f", duration / 1000)}秒",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            log.output?.let { output ->
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = output,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 3,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -406,6 +402,59 @@ fun LogsContent(
                     }
                 }
             }
+        }
+        
+        // 日志详情弹窗
+        uiState.selectedLog?.let { logDetail ->
+            AlertDialog(
+                onDismissRequest = { viewModel.clearSelectedLog() },
+                title = { Text("日志详情") },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Text("任务ID: ${logDetail.taskId}")
+                        logDetail.taskName?.let { Text("任务名称: $it") }
+                        Text("状态: ${if (logDetail.status == 0) "成功" else "失败"}")
+                        Text("开始时间: ${logDetail.startedAt}")
+                        logDetail.endedAt?.let { Text("结束时间: $it") }
+                        logDetail.duration?.let { Text("耗时: ${String.format("%.2f", it / 1000)}秒") }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = "日志内容:",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        if (uiState.isLoadingDetail) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        } else {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.small,
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Text(
+                                    text = logDetail.content ?: "暂无日志内容",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.clearSelectedLog() }) {
+                        Text("关闭")
+                    }
+                }
+            )
         }
     }
 }
@@ -602,6 +651,8 @@ fun TaskItem(
     onDisable: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -666,12 +717,60 @@ fun TaskItem(
                         Icon(Icons.Default.Stop, contentDescription = "停止")
                     }
                 } else {
-                    IconButton(onClick = onRun) {
+                    IconButton(onClick = {
+                        onRun()
+                        expanded = true
+                    }) {
                         Icon(Icons.Default.PlayArrow, contentDescription = "执行")
                     }
                 }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "删除")
+                }
+            }
+            
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "运行日志",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            IconButton(
+                                onClick = { expanded = false },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "关闭",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "任务 ${task.name} 正在运行...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

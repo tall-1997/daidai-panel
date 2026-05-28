@@ -40,14 +40,14 @@
 26        android:extractNativeLibs="false"
 27        android:fullBackupContent="@xml/backup_rules"
 27-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:12:9-54
-28        android:icon="@drawable/ic_launcher"
-28-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:13:9-45
+28        android:icon="@mipmap/ic_launcher"
+28-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:13:9-43
 29        android:label="@string/app_name"
 29-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:14:9-41
 30        android:networkSecurityConfig="@xml/network_security_config"
 30-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:15:9-69
-31        android:roundIcon="@drawable/ic_launcher"
-31-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-50
+31        android:roundIcon="@mipmap/ic_launcher_round"
+31-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-54
 32        android:supportsRtl="true"
 32-->/workspace/daidai-app/app/src/main/AndroidManifest.xml:17:9-35
 33        android:theme="@style/Theme.DaidaiApp" >

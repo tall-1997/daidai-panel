@@ -124,11 +124,11 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] /root/.gradle/caches/transf
 	android:fullBackupContent
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:12:9-54
 	android:roundIcon
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-50
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:16:9-54
 	tools:targetApi
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:19:9-29
 	android:icon
-		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:13:9-45
+		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:13:9-43
 	android:allowBackup
 		ADDED from /workspace/daidai-app/app/src/main/AndroidManifest.xml:10:9-35
 	android:theme
