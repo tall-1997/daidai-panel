@@ -39,17 +39,17 @@ class TaskViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             taskRepository.getTasks(page = _uiState.value.currentPage)
-                .onSuccess { taskListData ->
+                .onSuccess { taskListResponse ->
                     val newTasks = if (refresh) {
-                        taskListData.items
+                        taskListResponse.data ?: emptyList()
                     } else {
-                        _uiState.value.tasks + taskListData.items
+                        _uiState.value.tasks + (taskListResponse.data ?: emptyList())
                     }
                     
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         tasks = newTasks,
-                        hasMore = newTasks.size < taskListData.total
+                        hasMore = newTasks.size < taskListResponse.total
                     )
                 }
                 .onFailure { exception ->

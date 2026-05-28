@@ -30,8 +30,8 @@ class LoginViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             authRepository.login(username, password)
-                .onSuccess { loginData ->
-                    tokenManager.saveTokens(loginData.accessToken, loginData.refreshToken)
+                .onSuccess { loginResponse ->
+                    tokenManager.saveTokens(loginResponse.accessToken ?: "", loginResponse.refreshToken ?: "")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true
