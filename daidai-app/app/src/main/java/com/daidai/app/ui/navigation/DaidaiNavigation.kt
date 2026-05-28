@@ -36,6 +36,11 @@ fun DaidaiNavigation(
             HomeScreen(
                 onNavigateToWebHelper = {
                     navController.navigate(Screen.WebHelper.route)
+                },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
                 }
             )
         }

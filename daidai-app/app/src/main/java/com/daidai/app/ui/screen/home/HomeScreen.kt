@@ -29,7 +29,8 @@ sealed class HomeTab(val title: String, val icon: ImageVector) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToWebHelper: () -> Unit = {}
+    onNavigateToWebHelper: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf<HomeTab>(HomeTab.Tasks) }
 
@@ -80,7 +81,7 @@ fun HomeScreen(
                 is HomeTab.Environments -> EnvironmentsContent()
                 is HomeTab.Scripts -> ScriptsContent()
                 is HomeTab.Logs -> LogsContent()
-                is HomeTab.Settings -> SettingsContent()
+                is HomeTab.Settings -> SettingsContent(onLogout = onLogout)
             }
         }
     }
@@ -379,7 +380,7 @@ fun LogsContent(
                             }
                             log.duration?.let { duration ->
                                 Text(
-                                    text = "耗时: ${duration}ms",
+                                    text = "耗时: ${String.format("%.2f", duration / 1000)}秒",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -410,7 +411,12 @@ fun LogsContent(
 }
 
 @Composable
-fun SettingsContent() {
+fun SettingsContent(
+    onLogout: () -> Unit = {}
+) {
+    var showSystemInfo by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -431,28 +437,115 @@ fun SettingsContent() {
                 SettingItem(
                     icon = Icons.Default.Info,
                     title = "系统信息",
-                    subtitle = "查看系统版本和状态"
+                    subtitle = "查看系统版本和状态",
+                    onClick = { showSystemInfo = true }
                 )
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 SettingItem(
                     icon = Icons.Default.Update,
-                    title = "系统更新",
-                    subtitle = "检查并更新系统"
+                    title = "检查更新",
+                    subtitle = "检查App最新版本",
+                    onClick = { /* TODO: 检查更新 */ }
                 )
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 SettingItem(
                     icon = Icons.Default.Backup,
-                    title = "备份恢复",
-                    subtitle = "备份和恢复系统数据"
+                    title = "数据备份",
+                    subtitle = "备份任务和配置数据",
+                    onClick = { /* TODO: 数据备份 */ }
                 )
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 SettingItem(
                     icon = Icons.Default.Security,
                     title = "安全设置",
-                    subtitle = "密码修改和安全配置"
+                    subtitle = "密码修改和安全配置",
+                    onClick = { /* TODO: 安全设置 */ }
                 )
             }
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                SettingItem(
+                    icon = Icons.Default.Help,
+                    title = "帮助与反馈",
+                    subtitle = "使用帮助和问题反馈",
+                    onClick = { /* TODO: 帮助反馈 */ }
+                )
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                SettingItem(
+                    icon = Icons.Default.Info,
+                    title = "关于",
+                    subtitle = "App版本和开发者信息",
+                    onClick = { showAbout = true }
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("退出登录")
+        }
+    }
+    
+    if (showSystemInfo) {
+        AlertDialog(
+            onDismissRequest = { showSystemInfo = false },
+            title = { Text("系统信息") },
+            text = {
+                Column {
+                    Text("App版本: 0.0.1")
+                    Text("构建版本: 1")
+                    Text("最低支持: Android 8.0")
+                    Text("目标版本: Android 14")
+                    Text("技术栈: Kotlin + Jetpack Compose")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSystemInfo = false }) {
+                    Text("确定")
+                }
+            }
+        )
+    }
+    
+    if (showAbout) {
+        AlertDialog(
+            onDismissRequest = { showAbout = false },
+            title = { Text("关于") },
+            text = {
+                Column {
+                    Text("呆呆面板 Android App")
+                    Text("版本: 0.0.1")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("一个功能强大的定时任务管理平台客户端")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("开源地址:")
+                    Text("https://github.com/tall-1997/daidai-panel", 
+                        color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAbout = false }) {
+                    Text("确定")
+                }
+            }
+        )
     }
 }
 
@@ -460,37 +553,43 @@ fun SettingsContent() {
 fun SettingItem(
     icon: ImageVector,
     title: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit = {}
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 
