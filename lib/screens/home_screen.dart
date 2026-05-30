@@ -9,6 +9,9 @@ import 'logs_screen.dart';
 import 'notifications_screen.dart';
 import 'system_screen.dart';
 import 'settings_screen.dart';
+import 'quick_actions_screen.dart';
+import 'stats_screen.dart';
+import 'config_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _NavigationItem(Icons.article, '日志'),
     _NavigationItem(Icons.notifications, '通知'),
     _NavigationItem(Icons.computer, '系统'),
+    _NavigationItem(Icons.flash_on, '快捷操作'),
+    _NavigationItem(Icons.bar_chart, '统计'),
+    _NavigationItem(Icons.settings, '配置'),
     _NavigationItem(Icons.tune, '设置'),
   ];
 
@@ -154,6 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
       case 6:
         return const SystemScreen();
       case 7:
+        return const QuickActionsScreen();
+      case 8:
+        return const StatsScreen();
+      case 9:
+        return const ConfigScreen();
+      case 10:
         return const SettingsScreen();
       default:
         return const TasksScreen();
