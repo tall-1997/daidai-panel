@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import 'services/api_service.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -14,11 +13,8 @@ class DaidaiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        Provider<ApiService>(create: (_) => ApiService()),
-        ChangeNotifierProvider<AuthService>(create: (_) => AuthService()),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => AuthService(),
       child: MaterialApp(
         title: '呆呆面板',
         debugShowCheckedModeBanner: false,

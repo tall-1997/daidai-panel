@@ -37,24 +37,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final authService = context.read<AuthService>();
-    await authService.setServerUrl(_serverController.text.trim());
+    try {
+      final authService = context.read<AuthService>();
+      await authService.setServerUrl(_serverController.text.trim());
 
-    final success = await authService.login(
-      _usernameController.text.trim(),
-      _passwordController.text,
-    );
+      final success = await authService.login(
+        _usernameController.text.trim(),
+        _passwordController.text,
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      
-      if (success) {
-        // Login success - AuthWrapper will automatically navigate to HomeScreen
-        // because AuthService.isAuthenticated changed and notifyListeners() was called
-      } else {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        
+        if (success) {
+          // Login success - AuthWrapper will automatically navigate to HomeScreen
+          // because AuthService.isAuthenticated changed and notifyListeners() was called
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authService.error ?? '登录失败'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authService.error ?? '登录失败'),
+            content: Text('登录异常: $e'),
             backgroundColor: Colors.red,
           ),
         );

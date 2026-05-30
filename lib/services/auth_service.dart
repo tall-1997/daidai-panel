@@ -18,13 +18,17 @@ class AuthService extends ChangeNotifier {
   Future<void> initialize() async {
     if (_isInitialized) return;
     
-    await _apiService.init();
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    _username = prefs.getString('username');
-    
-    if (accessToken != null) {
-      _isAuthenticated = true;
+    try {
+      await _apiService.init();
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('access_token');
+      _username = prefs.getString('username');
+      
+      if (accessToken != null) {
+        _isAuthenticated = true;
+      }
+    } catch (e) {
+      // Initialization error
     }
     _isInitialized = true;
     notifyListeners();
@@ -35,12 +39,12 @@ class AuthService extends ChangeNotifier {
       _error = null;
       final result = await _apiService.login(username, password);
       
-      if (result['data'] != null) {
-        final data = result['data'];
-        await _apiService.setTokens(
-          data['access_token'],
-          data['refresh_token'],
-        );
+      // API returns tokens at top level, not in 'data'
+      final accessToken = result['access_token'] ?? result['data']?['access_token'];
+      final refreshToken = result['refresh_token'] ?? result['data']?['refresh_token'];
+      
+      if (accessToken != null) {
+        await _apiService.setTokens(accessToken, refreshToken ?? '');
         
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('username', username);

@@ -12,7 +12,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isRooted = false;
-  bool _isDaidaiModuleInstalled = false;
   MagiskModuleInfo? _moduleInfo;
 
   @override
@@ -24,17 +23,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _checkRootStatus() async {
     final isRooted = await MagiskHelper.isDaidaiModuleInstalled();
     MagiskModuleInfo? moduleInfo;
-    bool isDaidaiModuleInstalled = false;
     
     if (isRooted) {
-      isDaidaiModuleInstalled = true;
       moduleInfo = await MagiskHelper.getModuleInfo();
     }
     
     if (mounted) {
       setState(() {
         _isRooted = isRooted;
-        _isDaidaiModuleInstalled = isDaidaiModuleInstalled;
         _moduleInfo = moduleInfo;
       });
     }
@@ -110,7 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: _isRooted ? Colors.green : Colors.red,
                   ),
                 ),
-                if (_isDaidaiModuleInstalled && _moduleInfo != null) ...[
+                if (_isRooted && _moduleInfo != null) ...[
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.extension, color: Colors.purple),

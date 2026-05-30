@@ -13,11 +13,8 @@ class SystemScreen extends StatefulWidget {
 class _SystemScreenState extends State<SystemScreen> {
   bool _isLoading = true;
   bool _isRooted = false;
-  bool _isDaidaiModuleInstalled = false;
-  MagiskModuleInfo? _moduleInfo;
   Map<String, dynamic> _systemInfo = {};
-  Map<String, dynamic>? _rootSystemInfo;
-  String _panelLogs = '';
+  Map<String, dynamic> _dashboardData = {};
   String _error = '';
 
   @override
@@ -38,22 +35,36 @@ class _SystemScreenState extends State<SystemScreen> {
       // Check root status
       _isRooted = await MagiskHelper.isDaidaiModuleInstalled();
       
-      // Get Magisk module info if rooted
-      if (_isRooted) {
-        _isDaidaiModuleInstalled = true;
-        _moduleInfo = await MagiskHelper.getModuleInfo();
-        _rootSystemInfo = await MagiskHelper.getSystemInfoViaRoot();
-        _panelLogs = await MagiskHelper.getPanelLogsViaRoot(lines: 50);
-      }
-      
-      // Get API system info
+      // Get system info from API
       try {
-        final dashboard = await authService.apiService.getDashboard();
-        if (dashboard['data'] != null) {
-          _systemInfo = dashboard['data'];
+        final systemResult = await authService.apiService.getSystemInfo();
+        if (systemResult['data'] != null) {
+          _systemInfo = systemResult['data'];
         }
       } catch (e) {
         // API might not be available
+      }
+      
+      // Get dashboard data
+      try {
+        final dashboardResult = await authService.apiService.getDashboard();
+        if (dashboardResult['data'] != null) {
+          _dashboardData = dashboardResult['data'];
+        }
+      } catch (e) {
+        // API might not be available
+      }
+      
+      // If rooted, get additional info via root
+      if (_isRooted) {
+        try {
+          final rootInfo = await MagiskHelper.getSystemInfoViaRoot();
+          if (rootInfo.isNotEmpty) {
+            _systemInfo['root_info'] = rootInfo;
+          }
+        } catch (e) {
+          // Root info not available
+        }
       }
       
       setState(() {
@@ -90,18 +101,12 @@ class _SystemScreenState extends State<SystemScreen> {
                     children: [
                       _buildRootStatusCard(),
                       const SizedBox(height: 16),
-                      if (_isDaidaiModuleInstalled) ...[
-                        _buildMagiskModuleCard(),
-                        const SizedBox(height: 16),
-                      ],
-                      _buildSystemInfoCard(),
+                      _buildDashboardCard(),
                       const SizedBox(height: 16),
-                      if (_rootSystemInfo != null) ...[
-                        _buildRootSystemInfoCard(),
+                      _buildSystemInfoCard(),
+                      if (_systemInfo.containsKey('root_info')) ...[
                         const SizedBox(height: 16),
-                      ],
-                      if (_panelLogs.isNotEmpty) ...[
-                        _buildPanelLogsCard(),
+                        _buildRootSystemInfoCard(),
                       ],
                     ],
                   ),
@@ -144,7 +149,15 @@ class _SystemScreenState extends State<SystemScreen> {
     );
   }
 
-  Widget _buildMagiskModuleCard() {
+  Widget _buildDashboardCard() {
+    final taskCount = _dashboardData['task_count'] ?? 0;
+    final enabledTasks = _dashboardData['enabled_tasks'] ?? 0;
+    final runningTasks = _dashboardData['running_tasks'] ?? 0;
+    final todayLogs = _dashboardData['today_logs'] ?? 0;
+    final successLogs = _dashboardData['success_logs'] ?? 0;
+    final failedLogs = _dashboardData['failed_logs'] ?? 0;
+    final envCount = _dashboardData['env_count'] ?? 0;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -153,22 +166,69 @@ class _SystemScreenState extends State<SystemScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.extension, color: Colors.purple),
+                const Icon(Icons.dashboard, color: Colors.blue),
                 const SizedBox(width: 8),
                 Text(
-                  'Magisk 模块',
+                  '面板概览',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
             ),
             const Divider(),
-            if (_moduleInfo != null) ...[
-              _buildInfoRow('模块名称', _moduleInfo!.name),
-              _buildInfoRow('版本', _moduleInfo!.version),
-              _buildInfoRow('作者', _moduleInfo!.author),
-              _buildInfoRow('描述', _moduleInfo!.description),
-            ] else
-              const Text('无法读取模块信息'),
+            Row(
+              children: [
+                _buildStatItem('任务总数', '$taskCount', Colors.blue),
+                _buildStatItem('已启用', '$enabledTasks', Colors.green),
+                _buildStatItem('运行中', '$runningTasks', Colors.orange),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildStatItem('今日日志', '$todayLogs', Colors.purple),
+                _buildStatItem('成功', '$successLogs', Colors.green),
+                _buildStatItem('失败', '$failedLogs', Colors.red),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildStatItem('环境变量', '$envCount', Colors.teal),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
@@ -176,6 +236,20 @@ class _SystemScreenState extends State<SystemScreen> {
   }
 
   Widget _buildSystemInfoCard() {
+    final hostname = _systemInfo['hostname'] ?? '';
+    final cpuUsage = _systemInfo['cpu_usage'] ?? 0.0;
+    final memoryTotal = _systemInfo['memory_total'] ?? 0;
+    final memoryUsed = _systemInfo['memory_used'] ?? 0;
+    final memoryUsage = _systemInfo['memory_usage'] ?? 0.0;
+    final diskTotal = _systemInfo['disk_total'] ?? 0;
+    final diskUsed = _systemInfo['disk_used'] ?? 0;
+    final diskUsage = _systemInfo['disk_usage'] ?? 0.0;
+    final uptime = _systemInfo['uptime'] ?? '';
+    final goVersion = _systemInfo['go_version'] ?? '';
+    final os = _systemInfo['os'] ?? '';
+    final arch = _systemInfo['arch'] ?? '';
+    final numCpu = _systemInfo['num_cpu'] ?? 0;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -184,27 +258,59 @@ class _SystemScreenState extends State<SystemScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.info, color: Colors.blue),
+                const Icon(Icons.computer, color: Colors.green),
                 const SizedBox(width: 8),
                 Text(
-                  '面板信息',
+                  '系统信息',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
             ),
             const Divider(),
-            if (_systemInfo.isNotEmpty) ...[
-              _buildInfoRow('运行任务', '${_systemInfo['runningTasks'] ?? 0}'),
-              _buildInfoRow('今日日志', '${_systemInfo['todayLogs'] ?? 0}'),
-            ] else
-              const Text('无法获取面板信息'),
+            if (hostname.isNotEmpty)
+              _buildInfoRow('主机名', hostname),
+            _buildInfoRow('操作系统', '$os $arch'),
+            _buildInfoRow('CPU 核心', '$numCpu 核'),
+            _buildInfoRow('CPU 使用率', '${cpuUsage.toStringAsFixed(1)}%'),
+            const SizedBox(height: 8),
+            _buildProgressBar('CPU', cpuUsage / 100, Colors.blue),
+            const SizedBox(height: 12),
+            _buildInfoRow('内存', '${_formatBytes(memoryUsed)} / ${_formatBytes(memoryTotal)}'),
+            _buildInfoRow('内存使用率', '${memoryUsage.toStringAsFixed(1)}%'),
+            const SizedBox(height: 8),
+            _buildProgressBar('内存', memoryUsage / 100, Colors.green),
+            const SizedBox(height: 12),
+            _buildInfoRow('磁盘', '${_formatBytes(diskUsed)} / ${_formatBytes(diskTotal)}'),
+            _buildInfoRow('磁盘使用率', '${diskUsage.toStringAsFixed(1)}%'),
+            const SizedBox(height: 8),
+            _buildProgressBar('磁盘', diskUsage / 100, Colors.orange),
+            const SizedBox(height: 12),
+            _buildInfoRow('运行时间', uptime),
+            _buildInfoRow('Go 版本', goVersion),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildProgressBar(String label, double progress, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: color.withOpacity(0.2),
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+          minHeight: 8,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRootSystemInfoCard() {
+    final rootInfo = _systemInfo['root_info'] as Map<String, dynamic>;
+    
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -222,55 +328,14 @@ class _SystemScreenState extends State<SystemScreen> {
               ],
             ),
             const Divider(),
-            if (_rootSystemInfo!.containsKey('memory'))
-              _buildInfoRow('内存', _rootSystemInfo!['memory']),
-            if (_rootSystemInfo!.containsKey('cpu'))
-              _buildInfoRow('CPU', _rootSystemInfo!['cpu']),
-            if (_rootSystemInfo!.containsKey('disk'))
-              _buildInfoRow('磁盘', _rootSystemInfo!['disk']),
-            if (_rootSystemInfo!.containsKey('uptime'))
-              _buildInfoRow('运行时间', _rootSystemInfo!['uptime']),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPanelLogsCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.article, color: Colors.orange),
-                const SizedBox(width: 8),
-                Text(
-                  '面板日志 (Root)',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const Divider(),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _panelLogs,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  color: Colors.green,
-                ),
-                maxLines: 20,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            if (rootInfo.containsKey('memory'))
+              _buildInfoRow('内存', rootInfo['memory']),
+            if (rootInfo.containsKey('cpu'))
+              _buildInfoRow('CPU', rootInfo['cpu']),
+            if (rootInfo.containsKey('disk'))
+              _buildInfoRow('磁盘', rootInfo['disk']),
+            if (rootInfo.containsKey('uptime'))
+              _buildInfoRow('运行时间', rootInfo['uptime']),
           ],
         ),
       ),
@@ -297,5 +362,12 @@ class _SystemScreenState extends State<SystemScreen> {
         ],
       ),
     );
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }
