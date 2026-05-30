@@ -2,14 +2,11 @@ name: Build Android & iOS
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, flutter-app ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
-
-env:
-  FLUTTER_VERSION: '3.22.0'
 
 jobs:
   build-android:
@@ -25,7 +22,7 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
           cache: true
       
       - name: Install dependencies
@@ -34,20 +31,11 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
       
-      - name: Build App Bundle
-        run: flutter build appbundle --release
-      
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-      
-      - name: Upload App Bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-aab
-          path: build/app/outputs/bundle/release/app-release.aab
 
   build-ios:
     name: Build iOS
@@ -57,7 +45,7 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
           cache: true
       
       - name: Install dependencies
@@ -66,11 +54,9 @@ jobs:
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
       
-      - name: Create IPA directory
-        run: mkdir -p build/ios/ipa
-      
-      - name: Package IPA
+      - name: Create IPA
         run: |
+          mkdir -p build/ios/ipa
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
@@ -90,26 +76,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download Android APK
+      - name: Download artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: android-apk
-      
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-ipa
-      
-      - name: Download Android AAB
-        uses: actions/download-artifact@v4
-        with:
-          name: android-aab
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            app-release.apk
-            app-release.aab
-            daidai-app.ipa
+            android-apk/app-release.apk
+            ios-ipa/daidai-app.ipa
           generate_release_notes: true
