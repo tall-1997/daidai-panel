@@ -344,7 +344,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                if (taskType == 'cron) const SizedBox(height: 16),
+                if (taskType == 'cron') const SizedBox(height: 16),
                 TextField(
                   controller: commandController,
                   decoration: const InputDecoration(

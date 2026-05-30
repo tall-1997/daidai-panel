@@ -278,7 +278,7 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> clearLogs() async {
-    final response = delete('/logs/clear');
+    final response = await delete('/logs/clear');
     return jsonDecode(response.body);
   }
 
