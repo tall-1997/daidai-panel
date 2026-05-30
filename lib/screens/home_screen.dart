@@ -38,13 +38,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _NavigationItem(Icons.tune, '设置'),
   ];
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _isSidebarExpanded = false; // 点击选项后自动收起侧边栏
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = context.watch<AuthService>();
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('呆呆面板'),
+        title: Text(_navigationItems[_selectedIndex].title),
         leading: IconButton(
           icon: Icon(_isSidebarExpanded ? Icons.menu_open : Icons.menu),
           onPressed: () {
@@ -93,53 +100,116 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Row(
         children: [
-          // Sidebar
-          if (_isSidebarExpanded)
-            NavigationRail(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              labelType: NavigationRailLabelType.all,
-              leading: IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: () {
-                  setState(() {
-                    _isSidebarExpanded = false;
-                  });
-                },
-              ),
-              destinations: _navigationItems.map((item) {
-                return NavigationRailDestination(
-                  icon: Icon(item.icon),
-                  label: Text(item.title),
-                );
-              }).toList(),
+          // 侧边栏
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: _isSidebarExpanded ? 200 : 60,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(2, 0),
+                ),
+              ],
             ),
-          // Main content
+            child: Column(
+              children: [
+                // 顶部用户信息
+                if (_isSidebarExpanded)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          child: Text(
+                            (authService.username ?? 'U')[0].toUpperCase(),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            authService.username ?? '用户',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!_isSidebarExpanded)
+                  const SizedBox(height: 16),
+                // 导航选项
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _navigationItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _navigationItems[index];
+                      final isSelected = _selectedIndex == index;
+                      
+                      return InkWell(
+                        onTap: () => _onItemTapped(index),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: _isSidebarExpanded ? 16 : 0,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: _isSidebarExpanded 
+                                ? MainAxisAlignment.start 
+                                : MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                item.icon,
+                                color: isSelected 
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                size: 24,
+                              ),
+                              if (_isSidebarExpanded) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    item.title,
+                                    style: TextStyle(
+                                      color: isSelected 
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Theme.of(context).colorScheme.onSurface,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                // 底部展开/收起按钮
+                IconButton(
+                  icon: Icon(_isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right),
+                  onPressed: () {
+                    setState(() {
+                      _isSidebarExpanded = !_isSidebarExpanded;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+          // 主内容区域
           Expanded(
             child: _getSelectedScreen(),
           ),
         ],
       ),
-      bottomNavigationBar: _isSidebarExpanded
-          ? null
-          : NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              destinations: _navigationItems.map((item) {
-                return NavigationDestination(
-                  icon: Icon(item.icon),
-                  label: item.title,
-                );
-              }).toList(),
-            ),
     );
   }
 
