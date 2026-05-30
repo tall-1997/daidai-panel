@@ -12,6 +12,8 @@ import 'settings_screen.dart';
 import 'quick_actions_screen.dart';
 import 'stats_screen.dart';
 import 'config_screen.dart';
+import 'terminal_screen.dart';
+import 'backup_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _NavigationItem(Icons.computer, '系统'),
     _NavigationItem(Icons.flash_on, '快捷操作'),
     _NavigationItem(Icons.bar_chart, '统计'),
+    _NavigationItem(Icons.terminal, '终端'),
+    _NavigationItem(Icons.backup, '备份'),
     _NavigationItem(Icons.settings, '配置'),
     _NavigationItem(Icons.tune, '设置'),
   ];
@@ -78,10 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
+                value: 1,
                 child: ListTile(
                   leading: const Icon(Icons.logout),
-                  title: Text('退出登录'),
+                  title: const Text('退出登录'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -168,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     size: 20,
                                     color: isSelected
                                         ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
@@ -222,8 +227,12 @@ class _HomeScreenState extends State<HomeScreen> {
       case 8:
         return const StatsScreen();
       case 9:
-        return const ConfigScreen();
+        return const TerminalScreen();
       case 10:
+        return const BackupScreen();
+      case 11:
+        return const ConfigScreen();
+      case 12:
         return const SettingsScreen();
       default:
         return const TasksScreen();

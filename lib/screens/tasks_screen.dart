@@ -305,7 +305,20 @@ class _TasksScreenState extends State<TasksScreen> {
     final nameController = TextEditingController();
     final commandController = TextEditingController();
     final cronController = TextEditingController();
+    final timeoutController = TextEditingController(text: '0');
     String taskType = 'cron';
+
+    // Common cron expressions
+    final cronPresets = [
+      {'label': '每分钟', 'value': '* * * * *'},
+      {'label': '每小时', 'value': '0 * * * *'},
+      {'label': '每天0点', 'value': '0 0 * * *'},
+      {'label': '每天8点', 'value': '0 8 * * *'},
+      {'label': '每天12点', 'value': '0 12 * * *'},
+      {'label': '每天20点', 'value': '0 20 * * *'},
+      {'label': '每周一', 'value': '0 0 * * 1'},
+      {'label': '每月1号', 'value': '0 0 1 * *'},
+    ];
 
     showDialog(
       context: context,
@@ -339,23 +352,51 @@ class _TasksScreenState extends State<TasksScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                if (taskType == 'cron')
+                if (taskType == 'cron') ...[
                   TextField(
                     controller: cronController,
                     decoration: const InputDecoration(
                       labelText: 'Cron 表达式',
-                      hintText: '0 * * * *',
+                      hintText: '* * * * *',
                       border: OutlineInputBorder(),
+                      helperText: '格式: 分 时 日 月 周',
                     ),
                   ),
-                if (taskType == 'cron') const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  // Cron presets
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: cronPresets.map((preset) => ActionChip(
+                      label: Text(preset['label']!, style: const TextStyle(fontSize: 12)),
+                      onPressed: () {
+                        setDialogState(() {
+                          cronController.text = preset['value']!;
+                        });
+                      },
+                    )).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 TextField(
                   controller: commandController,
                   decoration: const InputDecoration(
                     labelText: '执行命令',
                     border: OutlineInputBorder(),
+                    hintText: 'node task.js',
                   ),
                   maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: timeoutController,
+                  decoration: const InputDecoration(
+                    labelText: '超时时间（秒）',
+                    hintText: '0 表示不限制',
+                    border: OutlineInputBorder(),
+                    helperText: '任务执行超时时间，0表示不限制',
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
               ],
             ),
@@ -380,6 +421,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     'name': nameController.text,
                     'task_type': taskType,
                     'command': commandController.text,
+                    'timeout': int.tryParse(timeoutController.text) ?? 0,
                     if (taskType == 'cron') 'cron_expression': cronController.text,
                   });
                   Navigator.pop(context);
