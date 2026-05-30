@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,14 +43,19 @@ fun HomeScreen(
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf<HomeTab>(HomeTab.Tasks) }
+    var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("呆呆面板") },
                 actions = {
-                    IconButton(onClick = { /* TODO: 搜索 */ }) {
-                        Icon(Icons.Default.Search, contentDescription = "搜索")
+                    IconButton(onClick = { showSearch = !showSearch }) {
+                        Icon(
+                            if (showSearch) Icons.Default.Close else Icons.Default.Search,
+                            contentDescription = "搜索"
+                        )
                     }
                     IconButton(onClick = { /* TODO: 刷新 */ }) {
                         Icon(Icons.Default.Refresh, contentDescription = "刷新")
@@ -79,17 +86,46 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (selectedTab) {
-                is HomeTab.Tasks -> TasksContent(onNavigateToTaskDetail = onNavigateToTaskDetail)
-                is HomeTab.Environments -> EnvironmentsContent()
-                is HomeTab.Dependencies -> DependenciesContent()
-                is HomeTab.Logs -> LogsContent()
-                is HomeTab.Settings -> SettingsContent(onLogout = onLogout)
+            // 搜索框
+            if (showSearch && selectedTab is HomeTab.Tasks) {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { /* 搜索由onQueryChange触发 */ },
+                    active = false,
+                    onActiveChange = {},
+                    placeholder = { Text("搜索任务名称...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "清除")
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {}
+            }
+
+            // 内容区域
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (selectedTab) {
+                    is HomeTab.Tasks -> TasksContent(
+                        onNavigateToTaskDetail = onNavigateToTaskDetail,
+                        searchQuery = searchQuery
+                    )
+                    is HomeTab.Environments -> EnvironmentsContent()
+                    is HomeTab.Dependencies -> DependenciesContent()
+                    is HomeTab.Logs -> LogsContent()
+                    is HomeTab.Settings -> SettingsContent(onLogout = onLogout)
+                }
             }
         }
     }
@@ -98,10 +134,18 @@ fun HomeScreen(
 @Composable
 fun TasksContent(
     onNavigateToTaskDetail: (Int) -> Unit = {},
+    searchQuery: String = "",
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
+    
+    // 当搜索词变化时触发搜索
+    LaunchedEffect(searchQuery) {
+        if (searchQuery != uiState.searchQuery) {
+            viewModel.searchTasks(searchQuery)
+        }
+    }
     
     Box(modifier = Modifier.fillMaxSize()) {
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
@@ -167,24 +211,29 @@ fun TasksContent(
     if (showCreateDialog) {
         CreateTaskDialog(
             onDismiss = { showCreateDialog = false },
-            onCreate = { name, command, schedule ->
-                viewModel.createTask(name, command, schedule)
+            onCreate = { name, command, schedule, taskType ->
+                viewModel.createTask(name, command, schedule, taskType)
                 showCreateDialog = false
             }
         )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTaskDialog(
     onDismiss: () -> Unit,
-    onCreate: (String, String, String) -> Unit,
+    onCreate: (String, String, String, String) -> Unit,
     onUploadScript: ((String, String) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
     var schedule by remember { mutableStateOf("") }
+    var taskType by remember { mutableStateOf("cron") }
     var showScriptSelector by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    
+    val taskTypes = listOf("cron", "interval", "once", "manual")
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -195,15 +244,50 @@ fun CreateTaskDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("任务名称") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // 任务类型选择
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = taskType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("任务类型") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        taskTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    taskType = type
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                
                 OutlinedTextField(
                     value = command,
                     onValueChange = { command = it },
                     label = { Text("执行命令") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    maxLines = 5
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -219,18 +303,59 @@ fun CreateTaskDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = schedule,
-                    onValueChange = { schedule = it },
-                    label = { Text("调度表达式 (cron)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("例如: 0 0 * * * (每天0点)") }
-                )
+                
+                // Cron表达式输入（仅当类型为cron时显示）
+                if (taskType == "cron") {
+                    OutlinedTextField(
+                        value = schedule,
+                        onValueChange = { schedule = it },
+                        label = { Text("调度表达式 (cron)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("例如: 0 0 * * * (每天0点)") },
+                        supportingText = { Text("分 时 日 月 周") }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // 常用Cron模板
+                    Text(
+                        text = "常用模板",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AssistChip(
+                            onClick = { schedule = "0 0 * * *" },
+                            label = { Text("每天0点", style = MaterialTheme.typography.labelSmall) }
+                        )
+                        AssistChip(
+                            onClick = { schedule = "0 */1 * * *" },
+                            label = { Text("每小时", style = MaterialTheme.typography.labelSmall) }
+                        )
+                        AssistChip(
+                            onClick = { schedule = "*/5 * * * *" },
+                            label = { Text("每5分钟", style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                } else if (taskType == "interval") {
+                    OutlinedTextField(
+                        value = schedule,
+                        onValueChange = { schedule = it },
+                        label = { Text("间隔秒数") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("例如: 3600 (每小时)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onCreate(name, command, schedule) },
+                onClick = { onCreate(name, command, schedule, taskType) },
                 enabled = name.isNotBlank() && command.isNotBlank()
             ) {
                 Text("创建")
