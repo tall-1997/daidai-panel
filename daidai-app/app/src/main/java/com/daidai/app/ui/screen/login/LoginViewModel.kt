@@ -15,7 +15,8 @@ import javax.inject.Inject
 data class LoginUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val autoLoginChecked: Boolean = false
 )
 
 @HiltViewModel
@@ -29,15 +30,27 @@ class LoginViewModel @Inject constructor(
 
     val serverUrl: String
         get() = serverConfig.serverUrl
-    
+
     val savedUsername: String
         get() = serverConfig.username
-    
+
     val savedPassword: String
         get() = serverConfig.password
-    
+
     val savedRememberMe: Boolean
         get() = serverConfig.rememberMe
+
+    init {
+        checkAutoLogin()
+    }
+
+    private fun checkAutoLogin() {
+        if (serverConfig.rememberMe && serverConfig.username.isNotBlank() && serverConfig.password.isNotBlank()) {
+            login(serverConfig.username, serverConfig.password, true)
+        } else {
+            _uiState.value = _uiState.value.copy(autoLoginChecked = true)
+        }
+    }
 
     fun updateServerUrl(url: String) {
         serverConfig.serverUrl = url.trimEnd('/')
@@ -66,22 +79,23 @@ class LoginViewModel @Inject constructor(
     fun login(username: String, password: String, rememberMe: Boolean = false) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            
-            // 保存登录信息
+
             serverConfig.saveLoginInfo(username, password, rememberMe)
-            
+
             authRepository.login(username, password)
                 .onSuccess { loginResponse ->
                     tokenManager.saveTokens(loginResponse.accessToken ?: "", loginResponse.refreshToken ?: "")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isLoggedIn = true
+                        isLoggedIn = true,
+                        autoLoginChecked = true
                     )
                 }
                 .onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = exception.message
+                        error = exception.message,
+                        autoLoginChecked = true
                     )
                 }
         }

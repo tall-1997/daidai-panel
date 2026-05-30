@@ -37,6 +37,7 @@ sealed class HomeTab(val title: String, val icon: ImageVector) {
 @Composable
 fun HomeScreen(
     onNavigateToWebHelper: () -> Unit = {},
+    onNavigateToTaskDetail: (Int) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf<HomeTab>(HomeTab.Tasks) }
@@ -84,7 +85,7 @@ fun HomeScreen(
                 .padding(paddingValues)
         ) {
             when (selectedTab) {
-                is HomeTab.Tasks -> TasksContent()
+                is HomeTab.Tasks -> TasksContent(onNavigateToTaskDetail = onNavigateToTaskDetail)
                 is HomeTab.Environments -> EnvironmentsContent()
                 is HomeTab.Dependencies -> DependenciesContent()
                 is HomeTab.Logs -> LogsContent()
@@ -96,6 +97,7 @@ fun HomeScreen(
 
 @Composable
 fun TasksContent(
+    onNavigateToTaskDetail: (Int) -> Unit = {},
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -129,6 +131,7 @@ fun TasksContent(
                 items(uiState.tasks) { task ->
                     TaskItem(
                         task = task,
+                        onClick = { onNavigateToTaskDetail(task.id) },
                         onRun = { viewModel.runTask(task.id) },
                         onStop = { viewModel.stopTask(task.id) },
                         onEnable = { viewModel.enableTask(task.id) },
@@ -1267,18 +1270,23 @@ fun SettingItem(
 @Composable
 fun TaskItem(
     task: Task,
+    onClick: () -> Unit = {},
     onRun: () -> Unit,
     onStop: () -> Unit,
     onEnable: () -> Unit,
     onDisable: () -> Unit,
     onDelete: () -> Unit,
-    onGetLogs: ((Int) -> Unit)? = null,
-    taskLogs: List<String> = emptyList()
+    onGetLogs: (Int) -> Unit,
+    taskLogs: List<String>
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+    var showLogsDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -1289,132 +1297,229 @@ fun TaskItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.name,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = task.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (task.isPinned) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.PushPin,
+                                contentDescription = "置顶",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = task.statusText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = when (task.status) {
-                            Task.STATUS_RUNNING -> MaterialTheme.colorScheme.primary
-                            Task.STATUS_ENABLED -> MaterialTheme.colorScheme.tertiary
-                            Task.STATUS_QUEUED -> MaterialTheme.colorScheme.secondary
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        text = task.schedule.ifBlank { "无调度" },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                Switch(
-                    checked = task.isEnabled,
-                    onCheckedChange = { enabled ->
-                        if (enabled) onEnable() else onDisable()
-                    }
-                )
+                StatusChip(status = task.status)
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = task.command,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = if (task.schedule.isNullOrBlank()) "调度: 未设置" else "调度: ${task.schedule}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
+
+            // 调度信息
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "任务类型",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = task.taskType ?: "cron",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Column {
+                    Text(
+                        text = "上次执行",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = task.lastRunAt?.take(19) ?: "未执行",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Column {
+                    Text(
+                        text = "下次执行",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = task.nextRunAt?.take(19) ?: "未安排",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 if (task.isRunning) {
-                    IconButton(onClick = onStop) {
-                        Icon(Icons.Default.Stop, contentDescription = "停止")
+                    IconButton(
+                        onClick = onStop,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Stop,
+                            contentDescription = "停止",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 } else {
-                    IconButton(onClick = {
-                        onRun()
-                        expanded = true
-                        onGetLogs?.invoke(task.id)
-                    }) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "执行")
+                    IconButton(
+                        onClick = onRun,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = "执行",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "删除")
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = "展开"
+                    )
                 }
             }
-            
+
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Card(
+                Divider()
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "命令",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
+                    Text(
+                        text = task.command,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    OutlinedButton(
+                        onClick = if (task.isEnabled) onDisable else onEnable,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "运行日志",
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            IconButton(
-                                onClick = { expanded = false },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "关闭",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (task.isRunning) {
-                            Text(
-                                text = "任务 ${task.name} 正在运行...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        if (taskLogs.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "最新日志:",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            taskLogs.takeLast(5).forEach { log ->
-                                Text(
-                                    text = log,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(vertical = 2.dp)
-                                )
-                            }
-                        }
+                        Icon(
+                            if (task.isEnabled) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (task.isEnabled) "禁用" else "启用",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "删除",
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除任务「${task.name}」吗？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun StatusChip(status: Double) {
+    val (text, color) = when (status) {
+        Task.STATUS_DISABLED -> "已禁用" to MaterialTheme.colorScheme.onSurfaceVariant
+        Task.STATUS_QUEUED -> "排队中" to MaterialTheme.colorScheme.secondary
+        Task.STATUS_ENABLED -> "已启用" to MaterialTheme.colorScheme.tertiary
+        Task.STATUS_RUNNING -> "运行中" to MaterialTheme.colorScheme.primary
+        else -> "未知" to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = color.copy(alpha = 0.1f)
+    ) {
+        Text(
+            text = text,
+            color = color,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
     }
 }

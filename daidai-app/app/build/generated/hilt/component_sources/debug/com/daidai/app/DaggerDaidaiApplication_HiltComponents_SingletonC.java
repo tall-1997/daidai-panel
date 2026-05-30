@@ -40,6 +40,8 @@ import com.daidai.app.ui.screen.script.ScriptViewModel;
 import com.daidai.app.ui.screen.script.ScriptViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.daidai.app.ui.screen.system.SystemViewModel;
 import com.daidai.app.ui.screen.system.SystemViewModel_HiltModules_KeyModule_ProvideFactory;
+import com.daidai.app.ui.screen.task.TaskDetailViewModel;
+import com.daidai.app.ui.screen.task.TaskDetailViewModel_HiltModules_KeyModule_ProvideFactory;
 import dagger.hilt.android.ActivityRetainedLifecycle;
 import dagger.hilt.android.ViewModelLifecycle;
 import dagger.hilt.android.flags.HiltWrapper_FragmentGetContextFix_FragmentGetContextFixModule;
@@ -403,7 +405,7 @@ public final class DaggerDaidaiApplication_HiltComponents_SingletonC {
 
     @Override
     public Set<String> getViewModelKeys() {
-      return SetBuilder.<String>newSetBuilder(8).add(DependencyViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(EnvViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LogViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LoginViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ScriptViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ServerConfigViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SystemViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(TaskViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
+      return SetBuilder.<String>newSetBuilder(9).add(DependencyViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(EnvViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LogViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LoginViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ScriptViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ServerConfigViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SystemViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(TaskDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(TaskViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
     }
 
     @Override
@@ -442,6 +444,8 @@ public final class DaggerDaidaiApplication_HiltComponents_SingletonC {
     private Provider<ServerConfigViewModel> serverConfigViewModelProvider;
 
     private Provider<SystemViewModel> systemViewModelProvider;
+
+    private Provider<TaskDetailViewModel> taskDetailViewModelProvider;
 
     private Provider<TaskViewModel> taskViewModelProvider;
 
@@ -493,12 +497,13 @@ public final class DaggerDaidaiApplication_HiltComponents_SingletonC {
       this.scriptViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 4);
       this.serverConfigViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 5);
       this.systemViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 6);
-      this.taskViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 7);
+      this.taskDetailViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 7);
+      this.taskViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 8);
     }
 
     @Override
     public Map<String, Provider<ViewModel>> getHiltViewModelMap() {
-      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(8).put("com.daidai.app.ui.screen.dependency.DependencyViewModel", ((Provider) dependencyViewModelProvider)).put("com.daidai.app.ui.screen.env.EnvViewModel", ((Provider) envViewModelProvider)).put("com.daidai.app.ui.screen.log.LogViewModel", ((Provider) logViewModelProvider)).put("com.daidai.app.ui.screen.login.LoginViewModel", ((Provider) loginViewModelProvider)).put("com.daidai.app.ui.screen.script.ScriptViewModel", ((Provider) scriptViewModelProvider)).put("com.daidai.app.ui.screen.home.ServerConfigViewModel", ((Provider) serverConfigViewModelProvider)).put("com.daidai.app.ui.screen.system.SystemViewModel", ((Provider) systemViewModelProvider)).put("com.daidai.app.ui.screen.home.TaskViewModel", ((Provider) taskViewModelProvider)).build();
+      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(9).put("com.daidai.app.ui.screen.dependency.DependencyViewModel", ((Provider) dependencyViewModelProvider)).put("com.daidai.app.ui.screen.env.EnvViewModel", ((Provider) envViewModelProvider)).put("com.daidai.app.ui.screen.log.LogViewModel", ((Provider) logViewModelProvider)).put("com.daidai.app.ui.screen.login.LoginViewModel", ((Provider) loginViewModelProvider)).put("com.daidai.app.ui.screen.script.ScriptViewModel", ((Provider) scriptViewModelProvider)).put("com.daidai.app.ui.screen.home.ServerConfigViewModel", ((Provider) serverConfigViewModelProvider)).put("com.daidai.app.ui.screen.system.SystemViewModel", ((Provider) systemViewModelProvider)).put("com.daidai.app.ui.screen.task.TaskDetailViewModel", ((Provider) taskDetailViewModelProvider)).put("com.daidai.app.ui.screen.home.TaskViewModel", ((Provider) taskViewModelProvider)).build();
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -543,7 +548,10 @@ public final class DaggerDaidaiApplication_HiltComponents_SingletonC {
           case 6: // com.daidai.app.ui.screen.system.SystemViewModel 
           return (T) new SystemViewModel(viewModelCImpl.systemRepository());
 
-          case 7: // com.daidai.app.ui.screen.home.TaskViewModel 
+          case 7: // com.daidai.app.ui.screen.task.TaskDetailViewModel 
+          return (T) new TaskDetailViewModel(viewModelCImpl.taskRepository());
+
+          case 8: // com.daidai.app.ui.screen.home.TaskViewModel 
           return (T) new TaskViewModel(viewModelCImpl.taskRepository());
 
           default: throw new AssertionError(id);

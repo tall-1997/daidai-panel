@@ -133,6 +133,46 @@ class TaskRepository @Inject constructor(
         }
     }
 
+    suspend fun pinTask(id: Int): Result<Unit> {
+        return try {
+            val response = apiService.pinTask(id)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "置顶任务失败"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun unpinTask(id: Int): Result<Unit> {
+        return try {
+            val response = apiService.unpinTask(id)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "取消置顶失败"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun copyTask(id: Int): Result<Task> {
+        return try {
+            val response = apiService.copyTask(id)
+            if (response.isSuccessful && response.body()?.data != null) {
+                response.body()?.data?.let { Result.success(it) }
+                    ?: Result.failure(Exception("复制任务失败"))
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "复制任务失败"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getTaskLogs(taskId: Int): Result<List<String>> {
         return try {
             val response = apiService.getLogs(taskId = taskId, page = 1, pageSize = 10)
@@ -154,7 +194,33 @@ class TaskRepository @Inject constructor(
             Result.success(emptyList())
         }
     }
-    
+
+    suspend fun getTaskLatestLog(taskId: Int): Result<TaskLog?> {
+        return try {
+            val response = apiService.getTaskLatestLog(taskId)
+            if (response.isSuccessful) {
+                Result.success(response.body()?.data)
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Result.success(null)
+        }
+    }
+
+    suspend fun getTaskStats(taskId: Int): Result<TaskStatsDetail?> {
+        return try {
+            val response = apiService.getTaskStats(taskId)
+            if (response.isSuccessful) {
+                Result.success(response.body()?.data)
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Result.success(null)
+        }
+    }
+
     private fun decompressLog(compressed: String): String {
         return try {
             val data = android.util.Base64.decode(compressed, android.util.Base64.DEFAULT)

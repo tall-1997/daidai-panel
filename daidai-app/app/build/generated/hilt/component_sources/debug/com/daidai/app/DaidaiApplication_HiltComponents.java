@@ -9,6 +9,7 @@ import com.daidai.app.ui.screen.log.LogViewModel_HiltModules;
 import com.daidai.app.ui.screen.login.LoginViewModel_HiltModules;
 import com.daidai.app.ui.screen.script.ScriptViewModel_HiltModules;
 import com.daidai.app.ui.screen.system.SystemViewModel_HiltModules;
+import com.daidai.app.ui.screen.task.TaskDetailViewModel_HiltModules;
 import dagger.Binds;
 import dagger.Component;
 import dagger.Module;
@@ -160,6 +161,7 @@ public final class DaidaiApplication_HiltComponents {
           ScriptViewModel_HiltModules.KeyModule.class,
           ServerConfigViewModel_HiltModules.KeyModule.class,
           SystemViewModel_HiltModules.KeyModule.class,
+          TaskDetailViewModel_HiltModules.KeyModule.class,
           TaskViewModel_HiltModules.KeyModule.class
       }
   )
@@ -204,6 +206,7 @@ public final class DaidaiApplication_HiltComponents {
           ScriptViewModel_HiltModules.BindsModule.class,
           ServerConfigViewModel_HiltModules.BindsModule.class,
           SystemViewModel_HiltModules.BindsModule.class,
+          TaskDetailViewModel_HiltModules.BindsModule.class,
           TaskViewModel_HiltModules.BindsModule.class
       }
   )
