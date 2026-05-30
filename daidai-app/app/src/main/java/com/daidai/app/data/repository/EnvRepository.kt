@@ -65,4 +65,21 @@ class EnvRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun toggleEnv(id: Int, enabled: Boolean): Result<Unit> {
+        return try {
+            val response = if (enabled) {
+                apiService.enableEnv(id)
+            } else {
+                apiService.disableEnv(id)
+            }
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "切换环境变量状态失败"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

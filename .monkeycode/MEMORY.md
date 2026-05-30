@@ -55,3 +55,25 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
   - 支持预设常用服务器地址和历史记录
   - 登录页面和设置页面都可以选择服务器地址
   - 后端API实际运行在端口5701（本地开发环境）
+
+[Android App开发进度]
+- Date: 2026-05-30
+- Context: Agent 在执行 Android App 功能开发时记录
+- Category: 开发功能
+- Instructions:
+  - 当前版本: 0.0.5
+  - APK位置: /workspace/download/daidai-app-0.0.5-debug.apk
+  - Git仓库: https://github.com/tall-1997/daidai-panel
+  - 最新commit: 539a6de
+  - 后端运行端口: 5701
+  - 登录账号: admin/admin123
+  - 已实现功能:
+    1. 登录功能（自动登录、记住密码）
+    2. 任务列表（搜索、分页、状态显示）
+    3. 任务详情（查看/执行/停止/启用/禁用/置顶/复制/删除）
+    4. 任务创建（任务类型选择、Cron模板、脚本上传）
+    5. 环境变量管理
+    6. 依赖管理
+    7. 日志查看
+    8. 系统设置
+  - 技术栈: Kotlin + Jetpack Compose + Hilt + Retrofit

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.daidai.app.data.remote.model.Env
 import com.daidai.app.data.remote.model.Task
 import com.daidai.app.ui.screen.dependency.DependencyViewModel
 import com.daidai.app.ui.screen.env.EnvViewModel
@@ -428,6 +429,9 @@ fun EnvironmentsContent(
     viewModel: EnvViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var editingEnv by remember { mutableStateOf<Env?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<Env?>(null) }
     
     Box(modifier = Modifier.fillMaxSize()) {
         if (uiState.isLoading && uiState.envs.isEmpty()) {
@@ -466,29 +470,61 @@ fun EnvironmentsContent(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = env.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = env.name,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = env.value,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    env.remark?.let { remark ->
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = remark,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                                 Switch(
                                     checked = env.isEnabled,
-                                    onCheckedChange = { /* TODO: 切换启用状态 */ }
+                                    onCheckedChange = { enabled ->
+                                        viewModel.toggleEnv(env.id, enabled)
+                                    }
                                 )
                             }
+                            
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = env.value,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            env.remark?.let { remark ->
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = remark,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                IconButton(
+                                    onClick = { editingEnv = env },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = "编辑",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { showDeleteDialog = env },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "删除",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -503,7 +539,131 @@ fun EnvironmentsContent(
                 }
             }
         }
+        
+        // 添加环境变量按钮
+        FloatingActionButton(
+            onClick = { showCreateDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "添加环境变量")
+        }
     }
+    
+    // 创建环境变量对话框
+    if (showCreateDialog) {
+        EnvDialog(
+            title = "创建环境变量",
+            onDismiss = { showCreateDialog = false },
+            onConfirm = { name, value, remark ->
+                viewModel.createEnv(name, value, remark)
+                showCreateDialog = false
+            }
+        )
+    }
+    
+    // 编辑环境变量对话框
+    editingEnv?.let { env ->
+        EnvDialog(
+            title = "编辑环境变量",
+            initialName = env.name,
+            initialValue = env.value,
+            initialRemark = env.remark ?: "",
+            onDismiss = { editingEnv = null },
+            onConfirm = { name, value, remark ->
+                viewModel.updateEnv(env.id, name, value, remark)
+                editingEnv = null
+            }
+        )
+    }
+    
+    // 删除确认对话框
+    showDeleteDialog?.let { env ->
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除环境变量「${env.name}」吗？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteEnv(env.id)
+                        showDeleteDialog = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun EnvDialog(
+    title: String,
+    initialName: String = "",
+    initialValue: String = "",
+    initialRemark: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String?) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var value by remember { mutableStateOf(initialValue) }
+    var remark by remember { mutableStateOf(initialRemark) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("变量名") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text("变量值") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = remark,
+                    onValueChange = { remark = it },
+                    label = { Text("备注（可选）") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name, value, remark.ifBlank { null }) },
+                enabled = name.isNotBlank() && value.isNotBlank()
+            ) {
+                Text("确定")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
 
 @Composable

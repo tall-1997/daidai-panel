@@ -2,7 +2,9 @@ package com.daidai.app.ui.screen.env
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.daidai.app.data.remote.model.CreateEnvRequest
 import com.daidai.app.data.remote.model.Env
+import com.daidai.app.data.remote.model.UpdateEnvRequest
 import com.daidai.app.data.repository.EnvRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ data class EnvListUiState(
     val isLoading: Boolean = false,
     val envs: List<Env> = emptyList(),
     val error: String? = null,
+    val successMessage: String? = null,
     val currentPage: Int = 1,
     val hasMore: Boolean = true
 )
@@ -68,10 +71,11 @@ class EnvViewModel @Inject constructor(
         loadEnvs()
     }
 
-    fun deleteEnv(envId: Int) {
+    fun createEnv(name: String, value: String, remark: String? = null) {
         viewModelScope.launch {
-            envRepository.deleteEnv(envId)
+            envRepository.createEnv(CreateEnvRequest(name, value, remark))
                 .onSuccess {
+                    _uiState.value = _uiState.value.copy(successMessage = "环境变量创建成功")
                     loadEnvs(refresh = true)
                 }
                 .onFailure { exception ->
@@ -80,7 +84,48 @@ class EnvViewModel @Inject constructor(
         }
     }
 
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+    fun updateEnv(envId: Int, name: String, value: String, remark: String? = null) {
+        viewModelScope.launch {
+            envRepository.updateEnv(envId, UpdateEnvRequest(name, value, remark))
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(successMessage = "环境变量更新成功")
+                    loadEnvs(refresh = true)
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(error = exception.message)
+                }
+        }
+    }
+
+    fun deleteEnv(envId: Int) {
+        viewModelScope.launch {
+            envRepository.deleteEnv(envId)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(successMessage = "环境变量删除成功")
+                    loadEnvs(refresh = true)
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(error = exception.message)
+                }
+        }
+    }
+
+    fun toggleEnv(envId: Int, enabled: Boolean) {
+        viewModelScope.launch {
+            envRepository.toggleEnv(envId, enabled)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = if (enabled) "环境变量已启用" else "环境变量已禁用"
+                    )
+                    loadEnvs(refresh = true)
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(error = exception.message)
+                }
+        }
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
     }
 }
